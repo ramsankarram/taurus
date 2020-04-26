@@ -1534,6 +1534,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             self.engine.aggregator.add_underling(self.results_reader)
         else:
             self.results_reader = ResultsFromBZA()
+            self.results_reader.dump_file = self.engine.create_artifact('from_bza', '.dump')
             self.results_reader.log = self.log
             self.engine.aggregator.add_underling(self.results_reader)
 
@@ -1796,6 +1797,7 @@ class ResultsFromBZA(ResultsProvider):
         self.master = master
         self.min_ts = 0
         self.log = logging.getLogger('')
+        self.dump_file = None
         self.prev_errors = BetterDict()
         self.cur_errors = BetterDict()
         self.handle_errors = True
@@ -1827,6 +1829,8 @@ class ResultsFromBZA(ResultsProvider):
             return
 
         data, aggr_raw = self.query_data()
+        with open(self.dump_file, 'a') as dump:
+            dump.write("data:\n{}\naggr_raw:\n{}\n".format(data, aggr_raw))
         aggr = {}
         for label in aggr_raw:
             aggr[label['labelName']] = label
