@@ -24,8 +24,24 @@ from bzt.modules.functional import FunctionalResultsReader
 from bzt.modules.jmeter import JTLReader
 from bzt.utils import FileReader, get_full_path, BZT_DIR, get_assembled_value
 from .generator import ApiritifScriptGenerator
+from bzt.modules.reporting import AggregatorListener, Reporter
 
 IGNORED_LINE = re.compile(r"[^,]+,Total:\d+ Passed:\d+ Failed:\d+")
+
+
+class SpyListener(Reporter, AggregatorListener):
+    def __init__(self):
+        super(SpyListener, self).__init__()
+        self.log.warning("_d_ spy: init")
+
+    def aggregated_second(self, data):
+        self.log.warning("_d_ spy: aggregate {}".format(data))
+
+    def finalize(self):
+        self.log.warning("_d_ spy: finalize")
+
+    def post_process(self):
+        self.log.warning("_d_ spy: postprocess")
 
 
 class ApiritifNoseExecutor(SubprocessedExecutor):
@@ -69,6 +85,11 @@ class ApiritifNoseExecutor(SubprocessedExecutor):
         self.env.add_path({"PYTHONPATH": get_full_path(BZT_DIR, step_up=1)})
 
         self.reporting_setup()  # no prefix/suffix because we don't fully control report file names
+
+        reporter = SpyListener()
+        self.log.warning("_d_ listeners before: %s " % self.engine.aggregator.listeners)
+        self.engine.aggregator.add_listener(reporter)
+        self.log.warning("_d_ listeners after: %s " % self.engine.aggregator.listeners)
 
     def __tests_from_requests(self):
         filename = self.engine.create_artifact("test_requests", ".py")
