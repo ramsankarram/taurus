@@ -1826,8 +1826,10 @@ class ResultsFromBZA(ResultsProvider):
 
     def _calculate_datapoints(self, final_pass=False):
         if self.master is None:
+            self.log.warning('_d_ master: not found')
             return
 
+        self.log.warning('_d_ master: getting data from {}'.format(self.min_ts))
         data, aggr_raw = self.query_data()
         with open(self.dump_file, 'a') as dump:
             dump.write("data:\n{}\naggr_raw:\n{}\n".format(data, aggr_raw))
@@ -1844,6 +1846,7 @@ class ResultsFromBZA(ResultsProvider):
             if label.get('label') == 'ALL':
                 timestamps.extend([kpi['ts'] for kpi in label.get('kpis', [])])
 
+        self.log.warning("_d_ timestamps count: {}".format(len(timestamps)))
         self.handle_errors = True
 
         for tstmp in timestamps:
@@ -1862,6 +1865,7 @@ class ResultsFromBZA(ResultsProvider):
             point.recalculate()
 
             self.min_ts = point[DataPoint.TIMESTAMP] + 1
+            self.log.warning("_d_ timestamp: {}, next {}".format(tstmp, self.min_ts))
             yield point
 
     def __add_err_diff(self, point, err_diff):

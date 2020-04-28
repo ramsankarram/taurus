@@ -593,6 +593,7 @@ class Master(BZAObject):
 
         url = self.address + "/api/v4/data/kpis?" + urlencode(params)
         res = self._request(url)
+        self.log.warning('_d_ response from master: {}'.format(res))
         return res['result']
 
     def get_labels(self, ):
