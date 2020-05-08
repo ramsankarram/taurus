@@ -1697,6 +1697,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
         if 'progress' in master and master['progress'] > BZA_TEST_DATA_RECEIVED:
             self.log.info("Test was stopped in the cloud: %s", master['status'])
             self.test_ended = True
+            self.log.warning('_d_ CloudProv.check finished')
             return True
 
         self.router.start_if_ready()
@@ -1709,6 +1710,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
         return self.router.get_master_status()
 
     def post_process(self):
+        self.log.warning('_d_ CloudProv.post_process')
         if not self.detach and self.router and not self.test_ended:
             self.router.stop_test()
 
@@ -1717,7 +1719,9 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
                 open_browser(self.results_url)
 
         if self.router and self.router.master:
+            self.log.warning('_d_ CloudProv.post_process: get_full data..')
             full = self.router.master.get_full()
+            self.log.warning('_d_ {}'.format(full))
             if 'note' in full and full['note']:
                 self.log.warning("Cloud test has probably failed with message: %s", full['note'])
 
