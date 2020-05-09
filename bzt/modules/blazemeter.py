@@ -1836,6 +1836,7 @@ class ResultsFromBZA(ResultsProvider):
         self.log.warning('_d_ master: getting data from {}'.format(self.min_ts))
         data, aggr_raw = self.query_data()
         with open(self.dump_file, 'a') as dump:
+            self.log.warning("data:\n{}\naggr_raw:\n{}\n".format(data, aggr_raw))
             dump.write("data:\n{}\naggr_raw:\n{}\n".format(data, aggr_raw))
         aggr = {}
         for label in aggr_raw:
