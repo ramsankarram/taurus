@@ -1,0 +1,4 @@
+cloud:
+python -m bzt.cli -o settings.artifacts-dir="/tmp/bzt/%Y-%m-%d_%H-%M-%S.%f"  wip/cloud/debug.yml -cloud -v
+local:
+python -m bzt.cli -o settings.artifacts-dir="/tmp/bzt/%Y-%m-%d_%H-%M-%S.%f" -o services.1.prepare=[echo] wip/cloud/debug.yml
