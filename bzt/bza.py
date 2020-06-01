@@ -3,6 +3,7 @@ The idea for this module is to keep it separate from bzt codebase as much as pos
 it may become separate library in the future. Things like imports and logging should be minimal.
 """
 import base64
+import os
 import json
 import logging
 from collections import OrderedDict
@@ -15,6 +16,61 @@ from bzt.utils import to_json, MultiPartForm
 
 BZA_TEST_DATA_RECEIVED = 100
 ENDED = 140
+
+
+class DataLogger(object):
+    def __init__(self, file_name, clean=False):
+        if clean and os.path.exists(file_name):
+            os.remove(file_name)
+        self.file_name = file_name
+
+    def save(self, req, resp):
+        with open(self.file_name, 'a') as _file:
+            _file.write('request: {}\n'                        
+                        'response status_code: {}\n'
+                        'response reason: {}\n'
+                        'response content:{}\n\n'.format(req, resp.status_code, resp.reason, resp.content))
+
+
+class DataReader(object):
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.data = []
+
+    def read(self):
+        with open(self.file_name) as _file:
+            content = _file.read().split('\n')[:-1]
+            while content:
+                request = content.pop(0)[len('request: '):]
+                resp_status_code = int(content.pop(0)[len('response status_code: '):])
+                resp_reason = content.pop(0)[len('response reason: '):]
+                resp_content = content.pop(0)[len("response content:'\b"):-1]
+                resp_content = ''.join(resp_content.split('\\n'))
+
+                content.pop(0)  # empty line
+                response = MockResponse(content=resp_content, status_code=resp_status_code, reason=resp_reason)
+                self.data.append({'request': request, 'response': response})
+
+    def get(self):
+        transaction = self.data.pop(0)
+        return transaction['response']
+
+
+class MockResponse(object):
+    def __init__(self, content, status_code, reason):
+        self.content = content
+        self.status_code = status_code
+        self.reason = reason
+
+
+LOGGING_ON = False
+LOG_FILE = '/tmp/bm_data.log'
+
+if LOGGING_ON:
+    data_logger = DataLogger(LOG_FILE, clean=True)
+else:
+    data_reader = DataReader(LOG_FILE)
+    data_reader.read()
 
 
 class BZAObject(dict):
@@ -90,19 +146,30 @@ class BZAObject(dict):
 
         retry_limit = self._retry_limit
 
-        while True:
-            try:
-                response = self.http_request(
-                    method=log_method, url=url, data=data, headers=headers, timeout=self.timeout)
-            except requests.ReadTimeout:
-                if retry and retry_limit:
-                    retry_limit -= 1
-                    self.log.warning("ReadTimeout: %s. Retry..." % url)
-                    continue
-                raise
-            break
+        if LOGGING_ON:
+            while True:
+                request = {
+                    "method": log_method,
+                    "url": url,
+                    "data": data,
+                    "headers": headers,
+                    "timeout": self.timeout}
+                try:
+                    response = self.http_request(**request)
+                except requests.ReadTimeout:
+                    if retry and retry_limit:
+                        retry_limit -= 1
+                        self.log.warning("ReadTimeout: %s. Retry..." % url)
+                        continue
+                    raise
+                break
+
+            data_logger.save(request, response)
+        else:
+            response = data_reader.get()
 
         resp = response.content
+
         if not isinstance(resp, str):
             resp = resp.decode()
 
