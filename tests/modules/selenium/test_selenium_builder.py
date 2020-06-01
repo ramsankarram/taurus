@@ -6,7 +6,6 @@ import os
 import unittest
 
 from bzt import TaurusConfigError
-from bzt.six import PY2
 from tests import RESOURCES_DIR
 from tests.modules.selenium import SeleniumTestCase
 
@@ -84,20 +83,17 @@ class TestSeleniumScriptGeneration(SeleniumTestCase):
         with open(self.obj.script) as fds:
             content = fds.read()
 
-        if PY2:
-            print_i = "print i"
-        else:
-            print_i = "print(i)"
+        print_i = "print(i)"
 
         self.assertNotIn(content, "self.dlg_mng = DialogsManager(self.driver)")
 
         target_lines = [
-            "self.wnd_mng.switch('0')",
+            "switch_window('0')",
             """self.driver.execute_script("window.open('some.url');")""",
-            "self.wnd_mng.close()",
-            "self.wnd_mng.close('win_ser_local')",
-            "self.frm_mng.switch('index=1')",
-            "self.frm_mng.switch('relative=parent')",
+            "close_window()",
+            "close_window('win_ser_local')",
+            "switch_frame('index=1')",
+            "switch_frame('relative=parent')",
             "ActionChains(self.driver).click_and_hold(self.driver.find_element(var_loc_chain[0], "
             "var_loc_chain[1])).perform()",
             "ActionChains(self.driver).move_to_element_with_offset(self.driver.find_element(var_loc_chain[0],"
@@ -178,10 +174,11 @@ class TestSeleniumScriptGeneration(SeleniumTestCase):
 
         target_lines = [
             "options = webdriver.FirefoxOptions()",
+            "options.set_preference('network.proxy.type', '4')",
             "options.set_headless()",
             "profile = webdriver.FirefoxProfile()",
             "profile.set_preference('webdriver.log.file', '",
-            "driver = webdriver.Firefox(profile, firefox_options=options)"
+            "driver = webdriver.Firefox(profile, options=options)"
         ]
 
         for idx in range(len(target_lines)):
@@ -221,7 +218,7 @@ class TestSeleniumScriptGeneration(SeleniumTestCase):
         target_lines = [
             "options = webdriver.ChromeOptions()",
             "driver = webdriver.Chrome(service_log_path='",
-            "', chrome_options=options)"
+            "', options=options)"
         ]
 
         for idx in range(len(target_lines)):
@@ -719,7 +716,6 @@ class TestSeleniumScriptGeneration(SeleniumTestCase):
         for idx in range(len(target_lines)):
             self.assertIn(target_lines[idx], content, msg="\n\n%s. %s" % (idx, target_lines[idx]))
 
-    @unittest.skipIf(PY2, "py3 only")
     def test_non_utf(self):
         self.configure({
             "execution": [{
