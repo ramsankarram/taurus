@@ -26,10 +26,11 @@ class DataLogger(object):
 
     def save(self, req, resp):
         with open(self.file_name, 'a') as _file:
-            _file.write('request: {}\n'                        
+            _file.write('request: {}\n'
                         'response status_code: {}\n'
                         'response reason: {}\n'
-                        'response content:{}\n\n'.format(req, resp.status_code, resp.reason, resp.content))
+                        'response content: {}\n\n'.format(
+                            req, resp.status_code, resp.reason, json.dumps(json.loads(resp.content))))
 
 
 class DataReader(object):
@@ -44,8 +45,7 @@ class DataReader(object):
                 request = content.pop(0)[len('request: '):]
                 resp_status_code = int(content.pop(0)[len('response status_code: '):])
                 resp_reason = content.pop(0)[len('response reason: '):]
-                resp_content = content.pop(0)[len("response content:'\b"):-1]
-                resp_content = ''.join(resp_content.split('\\n'))
+                resp_content = content.pop(0)[len("response content:"):]
 
                 content.pop(0)  # empty line
                 response = MockResponse(content=resp_content, status_code=resp_status_code, reason=resp_reason)
