@@ -1,7 +1,13 @@
-@Library("jenkins_library") _
+@Library("jenkins_library@WAP-15611-migrate-jenkins-GKE") _
 
 node()
 {
+    agent {
+       kubernetes {
+           label 'jenkins-agent-common'
+           defaultContainer 'jenkins-agent-common'
+       }
+    }
     try
     {
         stage('Checkout')
