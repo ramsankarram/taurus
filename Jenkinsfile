@@ -2,12 +2,6 @@
 
 node()
 {
-    agent {
-       kubernetes {
-           label 'jenkins-agent-common'
-           defaultContainer 'jenkins-agent-common'
-       }
-    }
     try
     {
         stage('Checkout')
