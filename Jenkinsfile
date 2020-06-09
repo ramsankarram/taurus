@@ -1,7 +1,13 @@
 @Library("jenkins_library@WAP-15611-migrate-jenkins-GKE") _
-
+podTemplate(lable: 'jenkins-agent-common' ) {
 node()
 {
+    agent {
+       kubernetes {
+           label 'jenkins-agent-common'
+           defaultContainer 'jenkins-agent-common'
+       }
+    }
     try
     {
         stage('Checkout')
@@ -76,4 +82,5 @@ node()
     } finally {
          smartSlackNotification(channel: "taurus-dev", buildStatus:currentBuild.result ?: 'SUCCESS')
     }
+}
 }
