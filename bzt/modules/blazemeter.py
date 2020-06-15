@@ -39,7 +39,7 @@ from urwid import Pile, Text
 
 from bzt import AutomatedShutdown
 from bzt import TaurusInternalException, TaurusConfigError, TaurusException, TaurusNetworkError, NormalShutdown
-from bzt.bza import User, Session, Test, Workspace, MultiTest, BZA_TEST_DATA_RECEIVED, ENDED
+from bzt.bza import User, Session, Test, Workspace, MultiTest, BZA_TEST_DATA_RECEIVED, ENDED, LOGGING_ON
 from bzt.engine import Reporter, Provisioning, Configuration, Service
 from bzt.engine import Singletone, SETTINGS, ScenarioExecutor, EXEC
 from bzt.modules.aggregator import DataPoint, KPISet, ConsolidatingAggregator, ResultsProvider, AggregatorListener
@@ -1446,7 +1446,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
         self.results_reader = None
         self.user = User()
         self.__last_master_status = None
-        self.browser_open = 'start'
+        self.browser_open = 'start' if LOGGING_ON else 'none'
         self.widget = None
         self.detach = False
         self.router = None
