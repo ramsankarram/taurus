@@ -76,7 +76,7 @@ class Engine(object):
         self.aggregator = Aggregator(is_functional=False)
         self.aggregator.engine = self
         self.interrupted = False
-        self.check_interval = 1
+        self.check_interval = 0.1
         self.stopping_reason = None
         self.engine_loop_utilization = 0
         self.prepared = []

@@ -3,6 +3,7 @@ The idea for this module is to keep it separate from bzt codebase as much as pos
 it may become separate library in the future. Things like imports and logging should be minimal.
 """
 import base64
+import time
 import os
 import json
 import logging
@@ -16,13 +17,15 @@ from bzt.utils import to_json, MultiPartForm
 
 BZA_TEST_DATA_RECEIVED = 100
 ENDED = 140
+LOGGING_ON = False
+LOG_DIR = '/tmp/bm_data'
 
 
 class DataLogger(object):
-    def __init__(self, file_name, clean=False):
-        if clean and os.path.exists(file_name):
-            os.remove(file_name)
-        self.file_name = file_name
+    def __init__(self, clean=False):
+        self.file_name = os.path.join(LOG_DIR, 'data')
+        if clean and os.path.exists(self.file_name):
+            os.remove(self.file_name)
 
     def save(self, req, resp):
         with open(self.file_name, 'a') as _file:
@@ -33,10 +36,27 @@ class DataLogger(object):
                             req, resp.status_code, resp.reason, json.dumps(json.loads(resp.content))))
 
 
+class TimeLogger(object):
+    def __init__(self, clean=False):
+        self.file_name = os.path.join(LOG_DIR, 'timer')
+        if clean and os.path.exists(self.file_name):
+            os.remove(self.file_name)
+
+        self.orig_time = time.time
+        time.time = self.my_time
+
+    def my_time(self):
+        t = self.orig_time()
+        with open(self.file_name, 'a') as _file:
+            _file.write('{}\n'.format(t))
+        return t
+
+
 class DataReader(object):
-    def __init__(self, file_name):
-        self.file_name = file_name
+    def __init__(self):
+        self.file_name = os.path.join(LOG_DIR, 'data')
         self.data = []
+        self.read()
 
     def read(self):
         with open(self.file_name) as _file:
@@ -53,7 +73,25 @@ class DataReader(object):
 
     def get(self):
         transaction = self.data.pop(0)
-        return transaction['response']
+        return transaction['request'], transaction['response']
+
+
+class TimeReader(object):
+    def __init__(self, clean=False):
+        self.file_name = os.path.join(LOG_DIR, 'timer')
+        self.times = []
+        self.read()
+        time.time = self.my_time
+
+    def read(self):
+        with open(self.file_name) as _file:
+            content = _file.read().split('\n')[:-1]
+            while content:
+                t = float(content.pop(0))
+                self.times.append(t)
+
+    def my_time(self):
+        return self.times.pop(0)
 
 
 class MockResponse(object):
@@ -63,14 +101,12 @@ class MockResponse(object):
         self.reason = reason
 
 
-LOGGING_ON = False
-LOG_FILE = '/tmp/bm_data.log'
-
 if LOGGING_ON:
-    data_logger = DataLogger(LOG_FILE, clean=True)
+    data_logger = DataLogger(clean=True)
+    timer = TimeLogger(clean=True)
 else:
-    data_reader = DataReader(LOG_FILE)
-    data_reader.read()
+    data_reader = DataReader()
+    timer = TimeReader()
 
 
 class BZAObject(dict):
@@ -163,10 +199,16 @@ class BZAObject(dict):
                         continue
                     raise
                 break
-
             data_logger.save(request, response)
         else:
-            response = data_reader.get()
+            req, response = data_reader.get()
+
+            signature = 'a.blazemeter.com/api/v4/'
+            target = url[url.index(signature)+len(signature):]
+            if '?' in target:
+                target = target[:target.index('?')]
+            if signature + target not in req:
+                c = 1 + 2
 
         resp = response.content
 
@@ -649,7 +691,10 @@ class Master(BZAObject):
         for item in ('t', 'lt', 'by', 'n', 'ec', 'ts', 'na'):
             params.append(("kpis[]", item))
 
-        labels = self.get_labels()[:100]
+        try:
+            labels = self.get_labels()[:100]
+        except BaseException as exc:
+            a = 1 + 1
         if len(labels) == 100 and not self.warned_of_too_much_labels:
             self.log.warn("Using only first 100 labels, while test has more labels")
             self.warned_of_too_much_labels = True

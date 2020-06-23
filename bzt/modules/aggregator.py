@@ -863,7 +863,9 @@ class ConsolidatingAggregator(Aggregator, ResultsProvider):
         """
         Override ResultsProvider._calculate_datapoints
         """
+        self.log.warning('_d_ start underlings...')
         self._process_underlings(final_pass)
+        self.log.warning('_d_ underlings processed')
 
         self.log.debug("Consolidator buffer[%s]: %s", len(self.buffer), self.buffer.keys())
         if not self.buffer:
