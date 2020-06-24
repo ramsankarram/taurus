@@ -36,6 +36,6 @@ scenarios:
 modules:
   cloud:
     token: b4c1249391c6aeff5915f3f0:225d42460fa51edf554c2822671e9aab3c524613ad7731f6a96d74f5484282ca859f5470 #0
-    check-interval: 0.01s
+    #check-interval: 0.01s
     projects: deb
     test: one
