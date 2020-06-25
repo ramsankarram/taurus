@@ -31,12 +31,6 @@ from bzt.utils import get_stacktrace, communicate
 from bzt.utils import get_full_path, shutdown_process, shell_exec, RequiredTool, is_windows
 from bzt.utils import replace_in_config, JavaVM, Node, CALL_PROBLEMS, exec_and_communicate
 
-if not is_windows():
-    try:
-        from pyvirtualdisplay.smartdisplay import SmartDisplay as Display
-    except ImportError:
-        from pyvirtualdisplay import Display
-
 
 class Unpacker(Service):
     UNPACK = 'unpacker'

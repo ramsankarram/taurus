@@ -91,7 +91,8 @@ class TimeReader(object):
                 self.times.append(t)
 
     def my_time(self):
-        return self.times.pop(0)
+        t = self.times.pop(0)
+        return t
 
 
 class MockResponse(object):

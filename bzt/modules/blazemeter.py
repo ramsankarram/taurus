@@ -1692,6 +1692,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             return False
 
         self._last_check_time = time.time()
+        self.log.warning('_d_ blazemeter-1695 time={}'.format(self._last_check_time))
 
         master = self._check_master_status()
         status = master.get('status')
