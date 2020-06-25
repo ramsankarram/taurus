@@ -1,4 +1,5 @@
 settings:
+  #check-interval: 0.1s
   env:
     PYTHON: python3.6
     TOOL: apiritif

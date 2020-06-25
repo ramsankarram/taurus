@@ -17,7 +17,7 @@ from bzt.utils import to_json, MultiPartForm
 
 BZA_TEST_DATA_RECEIVED = 100
 ENDED = 140
-LOGGING_ON = False
+LOGGING_ON = True
 LOG_DIR = '/tmp/bm_data'
 
 

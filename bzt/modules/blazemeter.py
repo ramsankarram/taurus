@@ -1669,10 +1669,17 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
     def _should_skip_check(self):
         now = time.time()
         if self._last_check_time is None:
+            self.log.warning('_d_ _should_skip_check=False now={}, self._last_check_time is None'.format(now))
             return False
         elif now >= self._last_check_time + self.check_interval:
+            self.log.warning(
+                '_d_ _should_skip_check=False now={}, self._last_check_time={}, self.check_interval={}'.format(
+                    now, self._last_check_time, self.check_interval))
             return False
         else:
+            self.log.warning(
+                '_d_ _should_skip_check=True now={}, self._last_check_time={}, self.check_interval={}'.format(
+                    now, self._last_check_time, self.check_interval))
             return True
 
     def check(self):
