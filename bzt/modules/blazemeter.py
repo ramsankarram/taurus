@@ -1698,7 +1698,6 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             self.results_reader.master = self.router.master
 
         if progress == ENDED:
-        #    self.results_reader.master = self.router.master
             self.log.info("Test was stopped in the cloud: %s", status)
             self.test_ended = True
             self.log.warning('_d_ CloudProv.check finished')
