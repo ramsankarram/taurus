@@ -601,7 +601,8 @@ class Master(BZAObject):
             params.append(("kpis[]", item))
 
         try:
-            labels = self.get_labels()[:100]
+            labels = self.get_labels()
+            labels = labels[:100]
         except BaseException as exc:
             a = 1 + 1
         if len(labels) == 100 and not self.warned_of_too_much_labels:

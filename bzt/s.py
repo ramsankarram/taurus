@@ -2,7 +2,7 @@ import os
 import time
 import json
 
-LOGGING_ON = True
+LOGGING_ON = False
 LOG_DIR = '/tmp/bm_data'
 
 
