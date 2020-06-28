@@ -33,6 +33,7 @@ from distutils.version import LooseVersion
 from urllib import parse
 
 import bzt
+from bzt.s import s_time
 from bzt import ManualShutdown, get_configs_dir, TaurusConfigError, TaurusInternalException
 from bzt.utils import reraise, load_class, BetterDict, ensure_is_dict, dehumanize_time, is_windows, is_linux
 from bzt.utils import shell_exec, get_full_path, ExceptionalDownloader, get_uniq_name, HTTPClient, Environment
@@ -265,10 +266,10 @@ class Engine(object):
         Wait modules for finish
         :return:
         """
-        prev = time.time()
+        prev = s_time()
 
         while not self._check_modules_list():
-            now = time.time()
+            now = s_time()
             diff = now - prev
             delay = self.check_interval - diff
             self.engine_loop_utilization = diff / self.check_interval
@@ -276,7 +277,7 @@ class Engine(object):
             self.log.debug("Iteration took %.3f sec, sleeping for %.3f sec...", diff, delay)
             if delay > 0:
                 time.sleep(delay)
-            prev = time.time()
+            prev = s_time()
             if self.interrupted:
                 raise ManualShutdown()
         self.config.dump()

@@ -3,8 +3,6 @@ The idea for this module is to keep it separate from bzt codebase as much as pos
 it may become separate library in the future. Things like imports and logging should be minimal.
 """
 import base64
-import time
-import os
 import json
 import logging
 from collections import OrderedDict
@@ -13,101 +11,11 @@ from urllib.parse import urlencode
 import requests
 
 from bzt import TaurusNetworkError, ManualShutdown, VERSION, TaurusException
+from bzt.s import LOGGING_ON, s_data
 from bzt.utils import to_json, MultiPartForm
 
 BZA_TEST_DATA_RECEIVED = 100
 ENDED = 140
-LOGGING_ON = False
-LOG_DIR = '/tmp/bm_data'
-
-
-class DataLogger(object):
-    def __init__(self, clean=False):
-        self.file_name = os.path.join(LOG_DIR, 'data')
-        if clean and os.path.exists(self.file_name):
-            os.remove(self.file_name)
-
-    def save(self, req, resp):
-        with open(self.file_name, 'a') as _file:
-            _file.write('request: {}\n'
-                        'response status_code: {}\n'
-                        'response reason: {}\n'
-                        'response content: {}\n\n'.format(
-                            req, resp.status_code, resp.reason, json.dumps(json.loads(resp.content))))
-
-
-class TimeLogger(object):
-    def __init__(self, clean=False):
-        self.file_name = os.path.join(LOG_DIR, 'timer')
-        if clean and os.path.exists(self.file_name):
-            os.remove(self.file_name)
-
-        self.orig_time = time.time
-        time.time = self.my_time
-
-    def my_time(self):
-        t = self.orig_time()
-        with open(self.file_name, 'a') as _file:
-            _file.write('{}\n'.format(t))
-        return t
-
-
-class DataReader(object):
-    def __init__(self):
-        self.file_name = os.path.join(LOG_DIR, 'data')
-        self.data = []
-        self.read()
-
-    def read(self):
-        with open(self.file_name) as _file:
-            content = _file.read().split('\n')[:-1]
-            while content:
-                request = content.pop(0)[len('request: '):]
-                resp_status_code = int(content.pop(0)[len('response status_code: '):])
-                resp_reason = content.pop(0)[len('response reason: '):]
-                resp_content = content.pop(0)[len("response content:"):]
-
-                content.pop(0)  # empty line
-                response = MockResponse(content=resp_content, status_code=resp_status_code, reason=resp_reason)
-                self.data.append({'request': request, 'response': response})
-
-    def get(self):
-        transaction = self.data.pop(0)
-        return transaction['request'], transaction['response']
-
-
-class TimeReader(object):
-    def __init__(self, clean=False):
-        self.file_name = os.path.join(LOG_DIR, 'timer')
-        self.times = []
-        self.read()
-        time.time = self.my_time
-
-    def read(self):
-        with open(self.file_name) as _file:
-            content = _file.read().split('\n')[:-1]
-            while content:
-                t = float(content.pop(0))
-                self.times.append(t)
-
-    def my_time(self):
-        t = self.times.pop(0)
-        return t
-
-
-class MockResponse(object):
-    def __init__(self, content, status_code, reason):
-        self.content = content
-        self.status_code = status_code
-        self.reason = reason
-
-
-if LOGGING_ON:
-    data_logger = DataLogger(clean=True)
-    timer = TimeLogger(clean=True)
-else:
-    data_reader = DataReader()
-    timer = TimeReader()
 
 
 class BZAObject(dict):
@@ -199,10 +107,10 @@ class BZAObject(dict):
                         self.log.warning("ReadTimeout: %s. Retry..." % url)
                         continue
                     raise
+                s_data.save(request, response)
                 break
-            data_logger.save(request, response)
         else:
-            req, response = data_reader.get()
+            req, response = s_data.get()
 
             signature = 'a.blazemeter.com/api/v4/'
             target = url[url.index(signature)+len(signature):]

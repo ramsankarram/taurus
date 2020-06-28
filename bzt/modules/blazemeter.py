@@ -39,6 +39,7 @@ from urwid import Pile, Text
 
 from bzt import AutomatedShutdown
 from bzt import TaurusInternalException, TaurusConfigError, TaurusException, TaurusNetworkError, NormalShutdown
+from bzt.s import s_time
 from bzt.bza import User, Session, Test, Workspace, MultiTest, BZA_TEST_DATA_RECEIVED, ENDED, LOGGING_ON
 from bzt.engine import Reporter, Provisioning, Configuration, Service
 from bzt.engine import Singletone, SETTINGS, ScenarioExecutor, EXEC
@@ -190,7 +191,7 @@ class BlazeMeterUploader(Reporter, AggregatorListener, MonitoringListener, Singl
         self.browser_open = 'start'
         self.kpi_buffer = []
         self.send_interval = 30
-        self._last_status_check = time.time()
+        self._last_status_check = s_time()
         self.send_data = True
         self.upload_artifacts = True
         self.send_monitoring = True
@@ -471,8 +472,8 @@ class BlazeMeterUploader(Reporter, AggregatorListener, MonitoringListener, Singl
         Send data if any in buffer
         """
         self.log.debug("KPI bulk buffer len: %s", len(self.kpi_buffer))
-        if self.last_dispatch < (time.time() - self.send_interval):
-            self.last_dispatch = time.time()
+        if self.last_dispatch < (s_time() - self.send_interval):
+            self.last_dispatch = s_time()
             if self.send_data and len(self.kpi_buffer):
                 self.__send_data(self.kpi_buffer)
                 self.kpi_buffer = []
@@ -645,7 +646,7 @@ class MonitoringBuffer(object):
         return {
             "reportInfo": {
                 "sessionId": session['id'],
-                "timestamp": time.time(),
+                "timestamp": s_time(),
                 "userId": session['userId'],
                 "testId": session['testId'],
                 "type": "MONITOR",
@@ -1667,7 +1668,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             self.router.master.set({"name": str(self.report_name)})
 
     def _should_skip_check(self):
-        now = time.time()
+        now = s_time()
         if self._last_check_time is None:
             self.log.warning('_d_ _should_skip_check=False now={}, self._last_check_time is None'.format(now))
             return False
@@ -1691,7 +1692,7 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             self.log.debug("Skipping cloud status check")
             return False
 
-        self._last_check_time = time.time()
+        self._last_check_time = s_time()
         self.log.warning('_d_ blazemeter-1695 time={}'.format(self._last_check_time))
 
         master = self._check_master_status()
