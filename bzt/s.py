@@ -2,7 +2,7 @@ import os
 import time
 import json
 
-LOGGING_ON = True
+LOGGING_ON = False
 LOG_DIR = '/tmp/bm_data'
 
 
@@ -26,17 +26,17 @@ class DataLogger(object):
 
 class TimeLogger(object):
     def __init__(self, clean=False):
-        self.num = 0
+        self.num = -1
         self.file_name = os.path.join(LOG_DIR, 'timer')
         if clean and os.path.exists(self.file_name):
             os.remove(self.file_name)
 
     def my_time(self):
         t = time.time()
+        self.num += 1
         with open(self.file_name, 'a') as _file:
             _file.write('{} {}\n'.format(self.num, t))
 
-        self.num += 1
         return self.num, t
 
 
@@ -75,12 +75,11 @@ class TimeReader(object):
         with open(self.file_name) as _file:
             content = _file.read().split('\n')[:-1]
             while content:
-                t = float(content.pop(0))
-                self.times.append(t)
+                self.times.append(content.pop(0))
 
     def my_time(self):
-        t = self.times.pop(0)
-        return t.split(' ')
+        num, t = self.times.pop(0).split(' ')
+        return int(num), float(t)
 
 
 class MockResponse(object):
