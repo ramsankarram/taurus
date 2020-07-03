@@ -191,7 +191,7 @@ class BlazeMeterUploader(Reporter, AggregatorListener, MonitoringListener, Singl
         self.browser_open = 'start'
         self.kpi_buffer = []
         self.send_interval = 30
-        self._last_status_check = s_time()
+        _, self._last_status_check = s_time()
         self.send_data = True
         self.upload_artifacts = True
         self.send_monitoring = True
@@ -472,8 +472,9 @@ class BlazeMeterUploader(Reporter, AggregatorListener, MonitoringListener, Singl
         Send data if any in buffer
         """
         self.log.debug("KPI bulk buffer len: %s", len(self.kpi_buffer))
-        if self.last_dispatch < (s_time() - self.send_interval):
-            self.last_dispatch = s_time()
+        _, t = s_time()
+        if self.last_dispatch < (t - self.send_interval):
+            _, self.last_dispatch = s_time()
             if self.send_data and len(self.kpi_buffer):
                 self.__send_data(self.kpi_buffer)
                 self.kpi_buffer = []
@@ -643,10 +644,11 @@ class MonitoringBuffer(object):
                     }
 
         kpis = {"Network I/O": "Network I/O", "Memory": "Memory", "CPU": "CPU", "Connections": "Connections"}
+        _, t = s_time()
         return {
             "reportInfo": {
                 "sessionId": session['id'],
-                "timestamp": s_time(),
+                "timestamp": t,
                 "userId": session['userId'],
                 "testId": session['testId'],
                 "type": "MONITOR",
@@ -1668,19 +1670,19 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             self.router.master.set({"name": str(self.report_name)})
 
     def _should_skip_check(self):
-        now = s_time()
+        num, now = s_time()
         if self._last_check_time is None:
-            self.log.warning('_d_ _should_skip_check=False now={}, self._last_check_time is None'.format(now))
+            self.log.warning('_d_ _should_skip_check=False now=[{}] {}, self._last_check_time is None'.format(num, now))
             return False
         elif now >= self._last_check_time + self.check_interval:
             self.log.warning(
-                '_d_ _should_skip_check=False now={}, self._last_check_time={}, self.check_interval={}'.format(
-                    now, self._last_check_time, self.check_interval))
+                '_d_ _should_skip_check=False now=[{}] {}, self._last_check_time={}, self.check_interval={}'.format(
+                    num, now, self._last_check_time, self.check_interval))
             return False
         else:
             self.log.warning(
-                '_d_ _should_skip_check=True now={}, self._last_check_time={}, self.check_interval={}'.format(
-                    now, self._last_check_time, self.check_interval))
+                '_d_ _should_skip_check=True now=[{}] {}, self._last_check_time={}, self.check_interval={}'.format(
+                    num, now, self._last_check_time, self.check_interval))
             return True
 
     def check(self):
@@ -1692,8 +1694,8 @@ class CloudProvisioning(MasterProvisioning, WidgetProvider):
             self.log.debug("Skipping cloud status check")
             return False
 
-        self._last_check_time = s_time()
-        self.log.warning('_d_ blazemeter-1695 time={}'.format(self._last_check_time))
+        num, self._last_check_time = s_time()
+        self.log.warning('_d_ blazemeter-1695 time=[{}] {}'.format(num, self._last_check_time))
 
         master = self._check_master_status()
         status = master.get('status')

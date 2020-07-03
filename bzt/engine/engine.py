@@ -266,18 +266,18 @@ class Engine(object):
         Wait modules for finish
         :return:
         """
-        prev = s_time()
+        _, prev = s_time()
 
         while not self._check_modules_list():
-            now = s_time()
+            num, now = s_time()
             diff = now - prev
             delay = self.check_interval - diff
             self.engine_loop_utilization = diff / self.check_interval
-            self.log.warning('_d_ engine time: prev={}, now={}'.format(prev, now))
+            self.log.warning('_d_ engine time: prev={}, now=[{}] {}'.format(prev, num, now))
             self.log.debug("Iteration took %.3f sec, sleeping for %.3f sec...", diff, delay)
             if delay > 0:
                 time.sleep(delay)
-            prev = s_time()
+            _, prev = s_time()
             if self.interrupted:
                 raise ManualShutdown()
         self.config.dump()
