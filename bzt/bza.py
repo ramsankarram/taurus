@@ -107,10 +107,11 @@ class BZAObject(dict):
                         self.log.warning("ReadTimeout: %s. Retry..." % url)
                         continue
                     raise
+                num = s_data.num
                 s_data.save(request, response)
                 break
         else:
-            req, response = s_data.get()
+            req, response, num = s_data.get()
 
             signature = 'a.blazemeter.com/api/v4/'
             target = url[url.index(signature)+len(signature):]
@@ -124,7 +125,9 @@ class BZAObject(dict):
         if not isinstance(resp, str):
             resp = resp.decode()
 
-        self.log.debug("Response [%s]: %s", response.status_code, resp[:self.logger_limit] if resp else None)
+        self.log.debug("Response [{}] [{}]: {}".format(
+            num, response.status_code, resp[:self.logger_limit] if resp else None))
+
         if response.status_code >= 400:
             try:
                 result = json.loads(resp) if len(resp) else {}
