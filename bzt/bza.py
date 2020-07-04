@@ -36,6 +36,7 @@ class BZAObject(dict):
         self.http_session = requests.Session()
         self.http_request = self.http_session.request
         self._retry_limit = 5
+        self.first_discrepancy = True
 
         # copy infrastructure from prototype
         if isinstance(proto, BZAObject):
@@ -117,8 +118,9 @@ class BZAObject(dict):
             target = url[url.index(signature)+len(signature):]
             if '?' in target:
                 target = target[:target.index('?')]
-            if signature + target not in req:
-                c = 1 + 2
+            if signature + target not in req and self.first_discrepancy:
+                self.log.warning('\n\n *** first requests discrepancy! *** \n\n')
+                self.first_discrepancy = False
 
         resp = response.content
 

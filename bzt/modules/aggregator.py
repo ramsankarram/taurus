@@ -29,6 +29,7 @@ from yaml import SafeDumper
 from yaml.representer import SafeRepresenter
 
 from bzt import TaurusInternalException, TaurusConfigError
+from bzt.s import s_time
 from bzt.engine import Aggregator
 from bzt.utils import iteritems, dehumanize_time, JSONConvertible
 
@@ -836,8 +837,12 @@ class ConsolidatingAggregator(Aggregator, ResultsProvider):
             self.log.debug("Processed datapoint: %s/%s", point[DataPoint.TIMESTAMP], point[DataPoint.SOURCE_ID])
 
     def _process_underlings(self, final_pass):
-        time_start = time.time()
-        has_some_time = lambda x: time.time() - x < self.engine.check_interval
+        def has_some_time(x):
+            _, t = s_time()
+            return t - x < self.engine.check_interval
+
+        _, time_start = s_time()
+
         while final_pass or has_some_time(time_start):
             had_data = False
             for underling in self.underlings:
@@ -846,7 +851,10 @@ class ConsolidatingAggregator(Aggregator, ResultsProvider):
                     self._put_into_buffer(point)
 
             if not had_data:
+                self.log.warning('_d_ not had_data')
                 break
+            else:
+                self.log.warning('_d_ had_data')
 
     def _put_into_buffer(self, point):
         tstamp = point[DataPoint.TIMESTAMP]
